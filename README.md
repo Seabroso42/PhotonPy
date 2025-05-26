@@ -1,5 +1,5 @@
 <div align="left">
-  <img src="./interface/assets/snake_lamp.png" alt="Project Logo" width="128" height="128">
+  <img src="./interface/assets/readmeLogo.png" alt="Project Logo" width="240" height="100" >
 </div>
 
 # Photon-Py
