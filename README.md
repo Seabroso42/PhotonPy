@@ -1,5 +1,9 @@
+<img src="./assets/photon-pyLogo.png" alt="Project Logo" width="128" height="128">
 # Photon-Py
-![Logo](./assets/logo.png =128x128)
+
+<div align="left">
+  <img src="./assets/photon-pyLogo.png" alt="Project Logo" width="128" height="128">
+</div>
 A Wrapper on some computer vision methods in order to precisely track light and darkness in a image or video.
 
 ## Features
