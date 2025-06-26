@@ -1,1 +1,0 @@
-#script que vai conter o método principal de processamento da imagem

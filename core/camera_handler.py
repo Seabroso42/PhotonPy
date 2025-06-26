@@ -1,1 +1,0 @@
-#script que adapta o método de imagem para o stream da câmera
