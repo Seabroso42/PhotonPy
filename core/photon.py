@@ -7,25 +7,22 @@ class Photon:
     self._input= self._source(input)
     self._stream= None
 
-
-  def orb_reveal(self):
-    message = ""
-    #implementar descritor de imagem
-
-    return message
-
   def _source(self, path):
     #tratar diferentes inputs possíveis (imagem, video, camera)
     return
 
+  def to_hsv(self, previous):
+    #recebe uma imagem e converte o padrão "previous" para hsv
+    return
+
+  def color_segment(self, threshold):
+    #recebe uma imagem hsv
+    #cria uma máscara binária
+    #segmenta todos os pixels de uma imagem que esteja dentro de um intervalo de cor
+    return
+
   def morph(self, operation):
-    #implementar operações
-    return
-
-  def medfilter(self):
-    return
-
-  def bilateral_filter(self, args):
+    #implementar operações morfológicas
     return
 
   def opening(self, kernel):
@@ -38,28 +35,38 @@ class Photon:
 
     return
 
-  def histo(self):
-    #método base de histograma
+  def bilateral_filter(self, args):
+    #aplicação do filtro bilateral
     return
+
 
   def clahe(self):
     #versão evoluída do algoritmo do histograma
     return
 
+  def lightbreak(self):
+    #aplica limiarização adaptativa
+    #separa regiões claras e escuras
+    return
 
-  def canny(self):
+  def border_canny(self):
     #algoritmo canny de detecção de borda
     return
 
-  2
 
   def surfaceMap():
-    #reconhecimento do espaço representado na imagem ou vídeo do input
+    #recebe uma máscara binária limpa e retorna uma lista de coordenadas dos planos detectados.
     return
-
 
   def robot_eye():
-
-
+    #engloba as funções anteriores na intenção de criar uma função definitiva
     return
+
+  def orb_reveal(self):
+    message = ""
+    #implementar descritor de imagem
+    #descreve a iluminação do local e ângulo de origem da luz.
+    #retorna algum aviso sobre obstáculos ou riscos.
+
+    return message
 

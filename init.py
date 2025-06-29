@@ -1,1 +1,0 @@
-#execucação principal do código python aqui
