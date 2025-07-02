@@ -21,9 +21,9 @@ To seek harmony between classic techniques such as Laplacian, Canny, Sobel, Medi
 - Integration with cameras and application of filters in real time. (final objective)
 
 ## Filters used:
-Median Filter (noise reduction)
-Bilateral Filter (max. quality)
-Morphological: Opening and Closing.
+- Median Filter (noise reduction)
+- Bilateral Filter (max. quality)
+- Morphological: Opening and Closing.
 
 ## License
 
