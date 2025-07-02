@@ -73,14 +73,12 @@ def run_realtime_robot_eye():
 
 
 if __name__ == "__main__":
-    # Crie uma pasta 'images' e coloque uma imagem de teste nela.
-    # Ex: 'images/test.jpg'
-    IMAGE_PATH = "images/test.jpg"
+    IMAGE_PATH = ".jpg"
 
     # TESTES
     
     # TESTE 1: o pipeline de filtros + ORB
-    test_image_pipeline(IMAGE_PATH)
+    # test_image_pipeline(IMAGE_PATH)
     
     # TESTE 2: a segmentação por cor e detecção de superfície
     # test_surface_map(IMAGE_PATH)
