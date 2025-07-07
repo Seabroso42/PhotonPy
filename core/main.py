@@ -10,10 +10,10 @@ def test_image_pipeline(image_path):
                               .clahe()
                               .bilateral_filter()
                               .orb_reveal())
-        
+
         # Mostra o resultado final
         processed_photon.show("Resultado do Pipeline ORB")
-        
+
     except (FileNotFoundError, TypeError) as e:
         print(f"Erro: {e}")
 
@@ -22,7 +22,7 @@ def test_surface_map(image_path):
     print("\n-- Testando a detecção de superfícies (surfaceMap) --")
     try:
         # Cria uma máscara binária
-        # Segmentar uma cor 
+        # Segmentar uma cor
         # Exemplo para segmentar algo verde
         lower_green = [35, 40, 40]
         upper_green = [85, 255, 255]
@@ -35,7 +35,7 @@ def test_surface_map(image_path):
         #  surfaceMap na máscara
         contours, image_with_surfaces = Photon.surfaceMap(mask.image)
         print(f"SurfaceMap encontrou {len(contours)} contornos.")
-        
+
         cv2.imshow("Mascara usada", mask.image)
         cv2.imshow("Superfícies Detectadas", image_with_surfaces)
         cv2.waitKey(0)
@@ -76,10 +76,10 @@ if __name__ == "__main__":
     IMAGE_PATH = ".jpg"
 
     # TESTES
-    
+
     # TESTE 1: o pipeline de filtros + ORB
     # test_image_pipeline(IMAGE_PATH)
-    
+
     # TESTE 2: a segmentação por cor e detecção de superfície
     # test_surface_map(IMAGE_PATH)
 
