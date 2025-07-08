@@ -75,6 +75,19 @@ def run_realtime_robot_eye():
 if __name__ == "__main__":
     IMAGE_PATH = ".jpg"
 
+    # Carrega uma carta específica de Magic: The Gathering usando a API da Scryfall.
+    photon = Photon.from_magic_card("Black Lotus")
+
+    # Exibe a imagem da carta carregada em uma janela com o título "Carta Black Lotus".
+    photon.show("Carta Black Lotus")
+
+
+    # Carrega uma carta aleatória de Magic: The Gathering usando a API da Scryfall.
+    photon = Photon.from_random_magic_card()
+
+    # Exibe a imagem da carta aleatória em uma janela com o título "Carta Aleatória".
+    photon.show("Carta Aleatória")
+
     # TESTES
 
     # TESTE 1: o pipeline de filtros + ORB

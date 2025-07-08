@@ -1,11 +1,61 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2 as cv
+import requests 
 
 class Photon:
   def __init__(self, input):
     self._input= self._source(input)
     self._stream= None
+
+
+  @staticmethod
+  def from_magic_card(name):
+    headers = {
+      "User-Agent": "PhotonApp/1.0",
+      "Accept": "*/*"
+    }
+    url = f"https://api.scryfall.com/cards/named?fuzzy={name}"
+    resp = requests.get(url, headers=headers)
+
+    if resp.status_code == 200:
+      img_url = resp.json()["image_uris"]["normal"]
+      img_resp = requests.get(img_url)
+      img_array = np.asarray(bytearray(img_resp.content), dtype=np.uint8)
+      image = cv.imdecode(img_array, cv.IMREAD_COLOR)
+      photon = Photon(image)
+      photon._stream = image
+      return photon
+    else:
+      raise Exception("Carta não encontrada.")
+
+  @staticmethod
+  def from_random_magic_card():
+    headers = {
+      "User-Agent": "PhotonApp/1.0",
+      "Accept": "*/*"
+    }
+    url = "https://api.scryfall.com/cards/random"
+    resp = requests.get(url, headers=headers)
+
+    if resp.status_code == 200:
+      img_url = resp.json()["image_uris"]["normal"]
+      img_resp = requests.get(img_url)
+      img_array = np.asarray(bytearray(img_resp.content), dtype=np.uint8)
+      image = cv.imdecode(img_array, cv.IMREAD_COLOR)
+      photon = Photon(image)
+      photon._stream = image
+      return photon
+    else:
+      raise Exception("Erro ao buscar carta aleatória.")
+    
+  def show(self, window_name="Imagem"):
+    if self._stream is not None:
+      cv.imshow(window_name, self._stream)
+      cv.waitKey(0)
+      cv.destroyAllWindows()
+    else:
+      print("Nenhuma imagem carregada.")
 
   def _source(self, path):
     #tratar diferentes inputs possíveis (imagem, video, camera)
