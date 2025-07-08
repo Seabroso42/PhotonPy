@@ -1,13 +1,63 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2 as cv
-import requests 
+import requests
+import random
 
 class Photon:
   def __init__(self, input):
-    self._input= self._source(input)
-    self._stream= None
+    if isinstance(input, np.ndarray):
+        self._stream = input
+        self._input = input
+    else:
+        self._input = self._source(input)
+        self._stream = None
 
+  
+  @staticmethod
+  def from_pokemon(name):
+    url = f"https://pokeapi.co/api/v2/pokemon/{name.lower()}"
+    resp = requests.get(url)
+
+    if resp.status_code == 200:
+      data = resp.json()
+      img_url = data["sprites"]["other"]["official-artwork"]["front_default"]
+      img_resp = requests.get(img_url)
+      img_array = np.asarray(bytearray(img_resp.content), dtype=np.uint8)
+      image = cv.imdecode(img_array, cv.IMREAD_COLOR)
+      photon = Photon(image)
+      return photon
+    else:
+      raise Exception("Pokémon não encontrado.")
+
+  @staticmethod
+  def from_random_pokemon():
+    max_id = 898  # Total de Pokémon na PokéAPI (até a 8ª geração)
+    random_id = random.randint(1, max_id)
+
+    url = f"https://pokeapi.co/api/v2/pokemon/{random_id}"
+    resp = requests.get(url)
+
+    if resp.status_code == 200:
+      data = resp.json()
+      img_url = data["sprites"]["other"]["official-artwork"]["front_default"]
+
+      if img_url is None:
+        raise Exception("Pokémon não possui imagem oficial.")
+
+      img_resp = requests.get(img_url)
+      img_array = np.asarray(bytearray(img_resp.content), dtype=np.uint8)
+      image = cv.imdecode(img_array, cv.IMREAD_COLOR)
+
+      if image is None:
+        raise Exception("Falha ao carregar imagem do Pokémon.")
+
+      photon = Photon(image)
+      photon._stream = image
+      return photon
+    else:
+      raise Exception("Erro ao buscar Pokémon aleatório.")
+    
 
   @staticmethod
   def from_magic_card(name):

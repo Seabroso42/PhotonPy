@@ -76,17 +76,31 @@ if __name__ == "__main__":
     IMAGE_PATH = ".jpg"
 
     # Carrega uma carta específica de Magic: The Gathering usando a API da Scryfall.
-    photon = Photon.from_magic_card("Black Lotus")
+    # photon = Photon.from_magic_card("Black Lotus")
 
     # Exibe a imagem da carta carregada em uma janela com o título "Carta Black Lotus".
-    photon.show("Carta Black Lotus")
+    # photon.show("Carta Black Lotus")
 
 
     # Carrega uma carta aleatória de Magic: The Gathering usando a API da Scryfall.
-    photon = Photon.from_random_magic_card()
+    # photon = Photon.from_random_magic_card()
 
     # Exibe a imagem da carta aleatória em uma janela com o título "Carta Aleatória".
-    photon.show("Carta Aleatória")
+    # photon.show("Carta Aleatoria")
+
+    # Carrega a imagem oficial do Pokémon "Pikachu" usando a PokéAPI.
+    # pokemon = Photon.from_pokemon("Pikachu")
+
+    # Exibe a imagem do Pikachu em uma janela com o título correspondente.
+    # pokemon.show("Pikachu")
+
+
+    # Carrega a imagem oficial de um Pokémon aleatório usando a PokéAPI.
+    # O Pokémon é escolhido de forma aleatória com base no seu ID (1 a 898).
+    # pokemon = Photon.from_random_pokemon()
+
+    # Exibe a imagem do Pokémon aleatório em uma janela com o título "Pokemon Aleatorio".
+    # pokemon.show("Pokemon Aleatorio")
 
     # TESTES
 
