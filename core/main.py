@@ -71,9 +71,102 @@ def run_realtime_robot_eye():
     cap.release()
     cv2.destroyAllWindows()
 
+def menu():
+    while True:
+        print("\n=== MENU FONTE DE IMAGEM ===")
+        print("1 - Mostrar carta do Magic específica")
+        print("2 - Mostrar carta aleatória do Magic")
+        print("3 - Mostrar Pokémon específico")
+        print("4 - Mostrar Pokémon aleatório")
+        print("0 - Sair")
+
+        escolha_fonte = input("Escolha uma opção: ")
+
+        try:
+            if escolha_fonte == "0":
+                print("Encerrando...")
+                break
+
+            # Etapa 1: Carrega imagem
+            if escolha_fonte == "1":
+                nome = input("Nome da carta: ")
+                print("\nEscolha o tipo de imagem:")
+                print("1 - Carta completa (com moldura e texto)")
+                print("2 - Apenas a arte (sem moldura)")
+                tipo = input("Escolha: ")
+
+                image_type = "normal" if tipo == "1" else "art_crop"
+                imagem = Photon.from_magic_card(nome, image_type=image_type)
+
+            elif escolha_fonte == "2":
+                print("\nEscolha o tipo de imagem:")
+                print("1 - Carta completa (com moldura e texto)")
+                print("2 - Apenas a arte (sem moldura)")
+                tipo = input("Escolha: ")
+
+                image_type = "normal" if tipo == "1" else "art_crop"
+                imagem = Photon.from_random_magic_card(image_type=image_type)
+
+            elif escolha_fonte == "3":
+                nome = input("Nome do Pokémon: ")
+                imagem = Photon.from_pokemon(nome)
+
+            elif escolha_fonte == "4":
+                imagem = Photon.from_random_pokemon()
+
+            else:
+                print("Opção inválida.")
+                continue
+
+            # Etapa 2: O que fazer com a imagem?
+            while True:
+                print("\n=== MENU AÇÃO COM A IMAGEM ===")
+                print("1 - Exibir imagem original")
+                print("2 - Aplicar CLAHE e comparar")
+                print("3 - Aplicar filtros de ruído (mediana + bilateral) e comparar")
+                print("4 - Aplicar CLAHE + filtros e comparar")
+                print("5 - Aplicar apenas filtro de mediana e comparar")
+                print("6 - Aplicar apenas filtro bilateral e comparar")
+                print("0 - Voltar para o menu anterior")
+
+                escolha_acao = input("Escolha uma ação: ")
+
+                if escolha_acao == "0":
+                    break
+
+                elif escolha_acao == "1":
+                    imagem.show("Imagem Original")
+
+                elif escolha_acao == "2":
+                    img_clahe = Photon(imagem._stream.copy()).clahe()
+                    imagem.show_side_by_side(img_clahe, "Original", "Com CLAHE")
+
+                elif escolha_acao == "3":
+                    img_filtrada = Photon(imagem._stream.copy()).apply_median_filter().bilateral_filter()
+                    imagem.show_side_by_side(img_filtrada, "Original", "Pós-Filtros")
+
+                elif escolha_acao == "4":
+                    img_tudo = Photon(imagem._stream.copy()).clahe().apply_median_filter().bilateral_filter()
+                    imagem.show_side_by_side(img_tudo, "Original", "CLAHE + Filtros")
+
+                elif escolha_acao == "5":
+                    img_median = Photon(imagem._stream.copy()).apply_median_filter()
+                    imagem.show_side_by_side(img_median, "Original", "Filtro de Mediana")
+
+                elif escolha_acao == "6":
+                    img_bilateral = Photon(imagem._stream.copy()).bilateral_filter()
+                    imagem.show_side_by_side(img_bilateral, "Original", "Filtro Bilateral")
+
+                else:
+                    print("Ação inválida.")
+        except Exception as e:
+            print(f"Erro: {e}")
+
 
 if __name__ == "__main__":
     IMAGE_PATH = ".jpg"
+
+    menu()
 
     # Carrega uma carta específica de Magic: The Gathering usando a API da Scryfall.
     # photon = Photon.from_magic_card("Black Lotus")
@@ -93,6 +186,11 @@ if __name__ == "__main__":
 
     # Exibe a imagem do Pikachu em uma janela com o título correspondente.
     # pokemon.show("Pikachu")
+
+    # pikachu = Photon.from_pokemon("Pikachu")
+    # clahe_pikachu = Photon(pikachu._stream.copy()).clahe()
+
+    # pikachu.show_side_by_side(clahe_pikachu, "Original", "Com CLAHE")
 
 
     # Carrega a imagem oficial de um Pokémon aleatório usando a PokéAPI.
