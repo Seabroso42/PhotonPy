@@ -96,7 +96,7 @@ def menu():
                 tipo = input("Escolha: ")
 
                 image_type = "normal" if tipo == "1" else "art_crop"
-                imagem = Photon.from_magic_card(nome, image_type=image_type)
+                imagem = Photon.magic_gather(nome, image_type=image_type)
 
             elif escolha_fonte == "2":
                 print("\nEscolha o tipo de imagem:")
@@ -105,14 +105,14 @@ def menu():
                 tipo = input("Escolha: ")
 
                 image_type = "normal" if tipo == "1" else "art_crop"
-                imagem = Photon.from_random_magic_card(image_type=image_type)
+                imagem = Photon.magic_gather(image_type=image_type)
 
             elif escolha_fonte == "3":
                 nome = input("Nome do Pokémon: ")
-                imagem = Photon.from_pokemon(nome)
+                imagem = Photon.pokefetch(nome)
 
             elif escolha_fonte == "4":
-                imagem = Photon.from_random_pokemon()
+                imagem = Photon.pokefetch()
 
             else:
                 print("Opção inválida.")
