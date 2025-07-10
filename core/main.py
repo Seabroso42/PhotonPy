@@ -1,4 +1,5 @@
 from photon import Photon
+from test import *
 import cv2
 
 def test_image_pipeline(image_path):
@@ -165,8 +166,14 @@ def menu():
 
 if __name__ == "__main__":
     IMAGE_PATH = ".jpg"
-
-    menu()
+    print("\nStarting tests...")
+    test_clahe()
+    test_bilateral_median()
+    test_morph_operations()
+    test_individual_binarization()
+    print("\nAll tests completed!")
+    plt.show()
+    #menu()
 
     # Carrega uma carta específica de Magic: The Gathering usando a API da Scryfall.
     # photon = Photon.from_magic_card("Black Lotus")
