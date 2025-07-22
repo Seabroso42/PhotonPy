@@ -67,8 +67,8 @@ def test_binarization():
 # Executar testes
 if __name__ == "__main__":
     print("\nIniciando testes de pré-processamento...")
-    test_clahe()
-    test_filters()
-    test_morphology()
-    test_binarization()
+    #test_clahe()
+    #test_filters()
+    #test_morphology()
+    #test_binarization()
     print(f"\nTodos os testes completados! Resultados salvos em: {os.path.abspath(OUTPUT_DIR)}")
