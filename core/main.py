@@ -1,18 +1,118 @@
 from photon import Photon
 from test import *
 import cv2
+import os
+import matplotlib.pyplot as plt
+import numpy as np
+from skimage.measure import shannon_entropy
+import csv
+
+def calcular_brilho(img):
+    if len(img.shape) == 3:
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    return np.mean(img)
+
+
+def calcular_contraste(img):
+    if len(img.shape) == 3:
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    return np.std(img)
+
+
+def calcular_entropia(img):
+    if len(img.shape) == 3:
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    return shannon_entropy(img)
+
+
+def avaliar_melhoria(delta_contraste, delta_entropia, contraste_min=5, entropia_min=0.2):
+    return delta_contraste > contraste_min and delta_entropia > entropia_min
+
+
+def aplicar_filtro_por_nome(photon: Photon, nome_filtro: str) -> Photon:
+    filtrada = photon.copy()
+    if nome_filtro == "clahe":
+        filtrada.clahe()
+    elif nome_filtro == "binarize_histogram":
+        filtrada.binarize("histogram")
+    elif nome_filtro == "binarize_otsu":
+        filtrada.binarize("otsu")
+    elif nome_filtro == "apply_median_filter":
+        filtrada.apply_median_filter()
+    elif nome_filtro == "morph_open":
+        filtrada.morph("open")
+    elif nome_filtro == "bilateral_filter":
+        filtrada.bilateral_filter()
+    elif nome_filtro == "clahe+bilateral":
+        filtrada.clahe().bilateral_filter()
+    else:
+        raise ValueError(f"Filtro desconhecido: {nome_filtro}")
+    return filtrada
+
+
+def testar_filtro_completo(filtro_nome, qtd=50, image_type="art_crop"):
+    resultados = []
+    melhorou = 0
+
+    for i in range(qtd):
+        try:
+            print(f"[{i+1:02d}/{qtd}] Testando filtro '{filtro_nome}'...")
+            original = Photon.magic_gather(image_type=image_type)
+            processada = aplicar_filtro_por_nome(original, filtro_nome)
+
+            img1 = original._stream
+            img2 = processada._stream
+
+            b1, b2 = calcular_brilho(img1), calcular_brilho(img2)
+            c1, c2 = calcular_contraste(img1), calcular_contraste(img2)
+            e1, e2 = calcular_entropia(img1), calcular_entropia(img2)
+
+            delta_b, delta_c, delta_e = b2 - b1, c2 - c1, e2 - e1
+            sucesso = avaliar_melhoria(delta_c, delta_e)
+            if sucesso:
+                melhorou += 1
+
+            resultados.append([i+1, b1, b2, delta_b, c1, c2, delta_c, e1, e2, delta_e, sucesso])
+
+        except Exception as e:
+            print(f"[ERRO] {e}")
+
+    print(f"\n✅ {melhorou}/{qtd} imagens melhoraram com o filtro '{filtro_nome}'.")
+
+    nome_csv = f"resultados_metricas_{filtro_nome}.csv"
+    with open(nome_csv, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["ID", "Brilho_antes", "Brilho_depois", "Delta_brilho",
+                         "Contraste_antes", "Contraste_depois", "Delta_contraste",
+                         "Entropia_antes", "Entropia_depois", "Delta_entropia", "Melhorou"])
+        writer.writerows(resultados)
+
+    ids = [r[0] for r in resultados]
+    deltas_c = [r[6] for r in resultados]
+    deltas_e = [r[9] for r in resultados]
+
+    plt.figure(figsize=(10, 5))
+    plt.plot(ids, deltas_c, label="Δ Contraste", marker='o')
+    plt.plot(ids, deltas_e, label="Δ Entropia", marker='x')
+    plt.axhline(0, color="gray", linestyle="--")
+    plt.title(f"Métricas para filtro: {filtro_nome}")
+    plt.xlabel("Imagem")
+    plt.ylabel("Variação")
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(f"grafico_metricas_{filtro_nome}.png")
+    plt.show()
+
 
 def test_image_pipeline(image_path):
     """Demonstra o encadeamento de métodos em uma imagem estática."""
     print("-- Teste de pipeline em imagem estática --")
     try:
-        # Carrega a imagem e aplica um pipeline
         processed_photon = (Photon.from_path(image_path)
                               .clahe()
                               .bilateral_filter()
                               .orb_reveal())
 
-        # Mostra o resultado final
         processed_photon.show("Resultado do Pipeline ORB")
 
     except (FileNotFoundError, TypeError) as e:
@@ -22,18 +122,14 @@ def test_surface_map(image_path):
     """Demonstra a detecção de superfícies."""
     print("\n-- Testando a detecção de superfícies (surfaceMap) --")
     try:
-        # Cria uma máscara binária
-        # Segmentar uma cor
-        # Exemplo para segmentar algo verde
         lower_green = [35, 40, 40]
         upper_green = [85, 255, 255]
 
         mask = (Photon.from_path(image_path)
                       .to_hsv()
                       .color_segment(lower_green, upper_green)
-                      .closing((10,10))) # Fecha buracos na máscara
+                      .closing((10,10))) 
 
-        #  surfaceMap na máscara
         contours, image_with_surfaces = Photon.surfaceMap(mask.image)
         print(f"SurfaceMap encontrou {len(contours)} contornos.")
 
@@ -48,7 +144,7 @@ def test_surface_map(image_path):
 def run_realtime_robot_eye():
     """Executa a função robot_eye em tempo real com a webcam."""
     print("\n-- Executando RobotEye em tempo real (pressione 'q' para sair) --")
-    cap = cv2.VideoCapture(0) # 0 para a webcam padrão
+    cap = cv2.VideoCapture(0)
 
     if not cap.isOpened():
         print("Erro: Não foi possível abrir a câmera.")
@@ -60,10 +156,8 @@ def run_realtime_robot_eye():
             print("Erro: Não foi possível capturar o frame.")
             break
 
-        # Aplica o pipeline do robot_eye
         processed_frame = Photon.robot_eye(frame)
 
-        # Exibe o resultado
         cv2.imshow("RobotEye - Real-Time", processed_frame)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -88,14 +182,12 @@ def menu():
                 print("Encerrando...")
                 break
 
-            # Etapa 1: Carrega imagem
             if escolha_fonte == "1":
                 nome = input("Nome da carta: ")
                 print("\nEscolha o tipo de imagem:")
                 print("1 - Carta completa (com moldura e texto)")
                 print("2 - Apenas a arte (sem moldura)")
                 tipo = input("Escolha: ")
-
                 image_type = "normal" if tipo == "1" else "art_crop"
                 imagem = Photon.magic_gather(nome, image_type=image_type)
 
@@ -104,7 +196,6 @@ def menu():
                 print("1 - Carta completa (com moldura e texto)")
                 print("2 - Apenas a arte (sem moldura)")
                 tipo = input("Escolha: ")
-
                 image_type = "normal" if tipo == "1" else "art_crop"
                 imagem = Photon.magic_gather(image_type=image_type)
 
@@ -119,16 +210,16 @@ def menu():
                 print("Opção inválida.")
                 continue
 
-            # Etapa 2: O que fazer com a imagem?
             while True:
                 print("\n=== MENU AÇÃO COM A IMAGEM ===")
                 print("1 - Exibir imagem original")
-                print("2 - Aplicar CLAHE e comparar")
-                print("3 - Aplicar filtros de ruído (mediana + bilateral) e comparar")
-                print("4 - Aplicar CLAHE + filtros e comparar")
-                print("5 - Aplicar apenas filtro de mediana e comparar")
-                print("6 - Aplicar apenas filtro bilateral e comparar")
-                print("0 - Voltar para o menu anterior")
+                print("2 - Comparar Binarização Otsu (Figura 2)")
+                print("3 - Comparar Mediana vs Bilateral (Figura 3)")
+                print("4 - Comparar CLAHE + filtros (completo)")
+                print("5 - Comparar apenas Mediana")
+                print("6 - Comparar apenas Bilateral")
+                print("7 - Comparar morfologia 'open' (Figura 4)")
+                print("0 - Voltar")
 
                 escolha_acao = input("Escolha uma ação: ")
 
@@ -139,40 +230,47 @@ def menu():
                     imagem.show("Imagem Original")
 
                 elif escolha_acao == "2":
-                    img_clahe = Photon(imagem._stream.copy()).clahe()
-                    imagem.show_side_by_side(img_clahe, "Original", "Com CLAHE")
+                    bin_otsu = Photon(imagem._stream.copy()).binarize("otsu")
+                    imagem.show_side_by_side(bin_otsu, "Original", "Binarização Otsu", save_path="figura2_otsu.png")
+                    print("Figura 2: Binarização de Otsu salva como figura2_otsu.png")
 
                 elif escolha_acao == "3":
-                    img_filtrada = Photon(imagem._stream.copy()).apply_median_filter().bilateral_filter()
-                    imagem.show_side_by_side(img_filtrada, "Original", "Pós-Filtros")
+                    img_median = Photon(imagem._stream.copy()).apply_median_filter()
+                    img_bilateral = Photon(imagem._stream.copy()).bilateral_filter()
+                    img_median.show_side_by_side(img_bilateral, "Filtro Mediana", "Filtro Bilateral", save_path="figura3_ruido.png")
+                    print("Figura 3: Comparação de filtros de ruído salva como figura3_ruido.png")
 
                 elif escolha_acao == "4":
                     img_tudo = Photon(imagem._stream.copy()).clahe().apply_median_filter().bilateral_filter()
-                    imagem.show_side_by_side(img_tudo, "Original", "CLAHE + Filtros")
+                    imagem.show_side_by_side(img_tudo, "Original", "CLAHE + Filtros", save_path="figura_completa.png")
+                    print("Comparação completa salva como figura_completa.png")
 
                 elif escolha_acao == "5":
                     img_median = Photon(imagem._stream.copy()).apply_median_filter()
-                    imagem.show_side_by_side(img_median, "Original", "Filtro de Mediana")
+                    imagem.show_side_by_side(img_median, "Original", "Filtro Mediana", save_path="figura_mediana.png")
+                    print("Filtro de Mediana salvo como figura_mediana.png")
 
                 elif escolha_acao == "6":
                     img_bilateral = Photon(imagem._stream.copy()).bilateral_filter()
-                    imagem.show_side_by_side(img_bilateral, "Original", "Filtro Bilateral")
+                    imagem.show_side_by_side(img_bilateral, "Original", "Filtro Bilateral", save_path="figura_bilateral.png")
+                    print("Filtro Bilateral salvo como figura_bilateral.png")
+
+                elif escolha_acao == "7":
+                    bin_otsu = Photon(imagem._stream.copy()).binarize("otsu")
+                    morf = Photon(bin_otsu._stream.copy()).morph("open")
+                    bin_otsu.show_side_by_side(morf, "Binária com ruído", "Após Abertura", save_path="figura4_morfologia.png")
+                    print("Figura 4: Comparação morfológica salva como figura4_morfologia.png")
 
                 else:
                     print("Ação inválida.")
+
         except Exception as e:
             print(f"Erro: {e}")
 
 
+
 if __name__ == "__main__":
-    IMAGE_PATH = ".jpg"
-    print("\nStarting tests...")
-    test_clahe()
-    test_bilateral_median()
-    test_morph_operations()
-    test_individual_binarization()
-    print("\nAll tests completed!")
-    plt.show()
+   menu()
     #menu()
 
     # Carrega uma carta específica de Magic: The Gathering usando a API da Scryfall.
