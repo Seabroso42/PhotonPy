@@ -4,6 +4,7 @@ import numpy as np
 import requests
 import random
 import matplotlib.pyplot as plt
+from photon import Photon
 from typing import Optional, Union, Tuple, Literal
 
 class RobotEye:
@@ -140,24 +141,47 @@ class RobotEye:
             raise ValueError(f"Failed to fetch Magic card: {str(e)}")
 
     # ==================== REGION OF INTEREST ====================
-    def read_roi(self, init_point: Tuple[int, int], end_point: Tuple[int, int]) -> np.ndarray:
-        """Extract Region of Interest from current frame."""
-        if self._current_frame is None:
-            raise ValueError("No image available for ROI extraction")
+    def isolate_roi(self, init_point: tuple[int, int], end_point: tuple[int, int]) -> np.ndarray:
 
-        x1, y1 = init_point
-        x2, y2 = end_point
-        height, width = self._current_frame.shape[:2]
+      if self._current_frame is None:
+          raise ValueError("No frame available for ROI extraction")
 
-        # Validate coordinates
-        x1, y1 = max(0, x1), max(0, y1)
-        x2, y2 = min(width, x2), min(height, y2)
+      x1, y1 = init_point
+      x2, y2 = end_point
 
-        if x1 >= x2 or y1 >= y2:
-            raise ValueError("Invalid ROI coordinates")
+      # Convert to RGB and validate dimensions
+      image_rgb = cv.cvtColor(self._current_frame, cv.COLOR_BGR2RGB)
+      height, width = image_rgb.shape[:2]
 
-        region = self._current_frame[y1:y2, x1:x2]
-        return cv.cvtColor(region, cv.COLOR_BGR2RGB)
+      # Clamp coordinates to image bounds
+      x1, y1 = max(0, x1), max(0, y1)
+      x2, y2 = min(width, x2), min(height, y2)
+
+      if x1 >= x2 or y1 >= y2:
+          raise ValueError("Invalid ROI coordinates - area is zero or negative")
+
+      region = image_rgb[y1:y2, x1:x2]
+
+      if region.size == 0:
+          raise ValueError("Selected area is empty or outside image bounds")
+
+      return region
+
+    def roi_as_photon(self, init_point: tuple[int, int], end_point: tuple[int, int]) -> 'Photon':
+
+      if self._current_frame is None:
+          raise ValueError("No frame available for ROI extraction")
+
+      x1, y1 = init_point
+      x2, y2 = end_point
+
+      # Get raw ROI (automatically converts to RGB)
+      roi_image = self.isolate_roi(init_point, end_point)
+
+      # Create Photon instance with ROI as purity
+      photon_roi = Photon(image=roi_image, color_pattern='rgb')
+
+      return photon_roi
 
     # ==================== VIDEO METHODS ====================
     def video_webcam(self) -> None:
