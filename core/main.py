@@ -24,7 +24,6 @@ def calcular_entropia(img):
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     return shannon_entropy(img)
 
-
 def avaliar_melhoria(delta_contraste, delta_entropia, contraste_min=5, entropia_min=0.2):
     return delta_contraste > contraste_min and delta_entropia > entropia_min
 
@@ -128,7 +127,7 @@ def test_surface_map(image_path):
         mask = (Photon.from_path(image_path)
                       .to_hsv()
                       .color_segment(lower_green, upper_green)
-                      .closing((10,10))) 
+                      .closing((10,10)))
 
         contours, image_with_surfaces = Photon.surfaceMap(mask.image)
         print(f"SurfaceMap encontrou {len(contours)} contornos.")
