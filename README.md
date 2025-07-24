@@ -26,6 +26,39 @@ In order to create a function called “robotEye()” that abstracts the connect
 - Bilateral Filter (max. quality)
 - Morphological: Opening and Closing.
 
+## Fluxo do Projeto
+
+Aqui está uma visão geral da arquitetura e do fluxo de dados do projeto:
+
+```mermaid
+graph TD
+    A[Início: Usuário executa main.py] --> B{Escolha da Fonte de Imagem};
+    B --> C[API: pokefetch / magic_gather];
+    B --> D[Arquivo Local];
+    B --> E[Câmera ao vivo];
+    
+    subgraph "Camada de Aquisição (RobotEye / Photon)"
+        C --> F[Criação do Objeto Photon];
+        D --> F;
+        E --> F;
+    end
+
+    subgraph "Motor de Processamento (Photon)"
+        F --> G{Pipeline de Processamento};
+        G --> H["Método 1 (.clahe)"];
+        H --> I["Método 2 (.binarize)"];
+        I --> J["etc..."];
+    end
+
+    J --> K[Objeto Photon com Imagem Processada];
+
+    subgraph "Camada de Saída"
+        K --> L[Saída Visual (.show_side_by_side)];
+        K --> M[Saída de Dados (Gráficos, CSV)];
+    end
+
+    K --> N[Futuro: ModelRunner (IA)];
+
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
