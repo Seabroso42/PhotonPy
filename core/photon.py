@@ -1,64 +1,74 @@
 import numpy as np
 import cv2 as cv
-import requests
 import random
+from dataclasses import dataclass
 import matplotlib
-matplotlib.use('Agg')  # Backend não-interativo garantido
 import matplotlib.pyplot as plt
+from typing import *
+
+@dataclass
+class ColorPattern:
+    name:str
+    channels: int
+    opencv_code: Optional[int] = None
 
 class Photon:
-    def __init__(self, input):
-        if isinstance(input, np.ndarray):
-            self._stream = input.copy()
-            self._input = input.copy()
-        else:
-            self._input = self._source(input)
-            self._stream = self._input.copy() if self._input is not None else None
+    def __init__(self, input:Union[np.ndarray,cv.Mat], colorPattern:Union[ColorPattern,str]='bgr'):
+        self._purity = input.copy()
+        self._processed = None
+        self._colorPattern = colorPattern
+        self._model = None #classe que encapsula os modelos ML
+        self._histogram = None #classe que facilita o acesso aos dados de histograma
+        self._validate_image()
+      #  self._color_pattern = self._init_color_pattern(color_pattern)
+        self._model_runner = None
+        self._processing_stack = []
 
-    @staticmethod
-    def pokefetch(name: str = None) -> 'Photon':
-        try:
-            url = f"https://pokeapi.co/api/v2/pokemon/{name.lower()}" if name else f"https://pokeapi.co/api/v2/pokemon/{random.randint(1, 1025)}"
-            resp = requests.get(url)
-            resp.raise_for_status()
-            img_url = resp.json().get("sprites", {}).get("other", {}).get("official-artwork", {}).get("front_default") or resp.json().get("sprites", {}).get("front_default")
-            if not img_url:
-                raise ValueError("No image available")
+    @property
+    def original(self) -> np.ndarray:
+        """Acessa a imagem original"""
+        return self._original_image.copy()
 
-            img_resp = requests.get(img_url)
-            img_resp.raise_for_status()
-            img_array = np.asarray(bytearray(img_resp.content), dtype=np.uint8)
-            image = cv.imdecode(img_array, cv.IMREAD_COLOR)
-            return Photon(image)
-        except Exception as e:
-            raise ValueError(f"Failed to fetch Pokémon: {str(e)}")
+    @property
+    def processed(self) -> np.ndarray:
+        """Acessa a imagem processada"""
+        return self._processed_image.copy()
 
-    @staticmethod
-    def magic_gather(name: str = None, image_type: str = "art_crop") -> 'Photon':
-        try:
-            url = f"https://api.scryfall.com/cards/named?fuzzy={name}" if name else "https://api.scryfall.com/cards/random"
-            resp = requests.get(url, headers={"User-Agent": "PhotonApp/1.0"})
-            resp.raise_for_status()
-            card = resp.json()
-            img_url = card.get("image_uris", {}).get(image_type) or card.get("card_faces", [{}])[0].get("image_uris", {}).get(image_type)
-            if not img_url:
-                raise ValueError(f"Image type '{image_type}' not available")
-
-            img_resp = requests.get(img_url)
-            img_resp.raise_for_status()
-            img_array = np.asarray(bytearray(img_resp.content), dtype=np.uint8)
-            image = cv.imdecode(img_array, cv.IMREAD_COLOR)
-            return Photon(image)
-        except Exception as e:
-            raise ValueError(f"Failed to fetch Magic card: {str(e)}")
-
-    def _source(self, path):
-        return cv.imread(path)
+    @property
+    def histogram(self):
+        """Acessa o histograma (calculado sob demanda)"""
+        if self._histogram is None:
+            self._calculate_histogram()
+        return self._histogram
 
     def copy(self):
         new_photon = Photon(np.copy(self._input))
         new_photon._stream = np.copy(self._stream)
         return new_photon
+
+    def _validate_image(self, image: np.ndarray):
+        """Verifica se a imagem é válida"""
+        if not isinstance(image, np.ndarray):
+            raise TypeError("Imagem deve ser um array numpy")
+        if image.size == 0:
+            raise ValueError("Imagem vazia")
+
+    def _init_color_pattern(self, pattern) -> ColorPattern:
+        """Inicializa o padrão de cores"""
+        patterns = {
+            'bgr': ColorPattern('bgr', 3, None),
+            'rgb': ColorPattern('rgb', 3, cv2.COLOR_BGR2RGB),
+            'hsv': ColorPattern('hsv', 3, cv2.COLOR_BGR2HSV),
+            'grayscale': ColorPattern('grayscale', 1, cv2.COLOR_BGR2GRAY)
+        }
+
+        if isinstance(pattern, ColorPattern):
+            return pattern
+        elif pattern in patterns:
+            return patterns[pattern]
+        else:
+            raise ValueError(f"Padrão de cores não suportado: {pattern}")
+
 
     def show_side_by_side(self, other, title1="Original", title2="Processed", save_path="comparison.png"):
         if self._stream is None or other._stream is None:
